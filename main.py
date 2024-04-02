@@ -15,8 +15,15 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 import random
 import shutil
 
-from models import *
 from dataset import *
+from models import *
+
+
+PATCH_SIZE = 256
+NUM_PATCHES = 10
+
+split_data = True
+gen_patches = True
 
 if split_data:
     train_images, val_test_images = train_test_split(list(map(lambda f: f.split(".png")[0], os.listdir(images_dir))), train_size = 0.50)
@@ -27,6 +34,8 @@ if split_data:
     save_images(test_images, "test")
 
 if gen_patches:
+    train_x, train_y = get_images(os.path.join(csv_dir, "train.csv"))
+    val_x, val_y = get_images(os.path.join(csv_dir, "validation.csv"))
     mean, std = get_norm_params(train_x)
     print(mean, std)
 

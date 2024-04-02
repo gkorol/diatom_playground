@@ -1,15 +1,14 @@
 import os
 import tensorflow as tf
+import numpy as np
+import pandas as pd
+import cv2
 
-dataset_dir = "/kaggle/input/diatom-dataset"
-csv_dir = "/kaggle/input/diatom-csv/"
+dataset_dir = "diatom_dataset/"
+csv_dir = "diatom_dataset/diatom_csv/"
 annotations_dir = os.path.join(dataset_dir, "annotations")
 images_dir = os.path.join(dataset_dir, "images")
-PATCH_SIZE = 256
-NUM_PATCHES = 10
 
-split_data = False
-gen_patches = False
 
 def save_images(images, loc):    
     pd.DataFrame(images).to_csv(loc + ".csv")
@@ -31,10 +30,6 @@ def get_images(path):
         y.append(read_image(os.path.join(annotations_dir, f"{image[1]}.png")))
 
     return np.array(x), np.array(y)
-
-if gen_patches:
-    train_x, train_y = get_images(os.path.join(csv_dir, "train.csv"))
-    val_x, val_y = get_images(os.path.join(csv_dir, "validation.csv"))
 
 def get_norm_params(x):
     mean = np.mean(x)
