@@ -1,13 +1,30 @@
-import os
-import tensorflow as tf
 import numpy as np
 import pandas as pd
+import os
+import matplotlib.pyplot as plt
 import cv2
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+from tensorflow.keras.layers import *
+from tensorflow.keras.models import Model
+from tensorflow.keras.applications import MobileNetV2, VGG16, ResNet50, Xception, EfficientNetB0
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from tensorflow.keras.metrics import Recall, Precision
+from tensorflow.keras import backend as K
+from mpl_toolkits.axes_grid1 import ImageGrid
+import random
+import shutil
+
 
 dataset_dir = "diatom_dataset/"
 csv_dir = "diatom_dataset/diatom_csv/"
+patches_dir = "diatom_dataset/patches"
 annotations_dir = os.path.join(dataset_dir, "annotations")
 images_dir = os.path.join(dataset_dir, "images")
+IMAGE_SIZE = 256
+BATCH_SIZE = 32
+PATCH_SIZE = 256
+NUM_PATCHES = 10
 
 
 def save_images(images, loc):    
@@ -41,6 +58,38 @@ def get_norm_params(x):
     std = np.sqrt(std / len(x))
 
     return mean, std
+
+def make_patches(loc, x, y, mean, std):
+    df = pd.read_csv(os.path.join(csv_dir, f"{loc}.csv"))
+    x_len = len(x)
+    os.makedirs(f"{dataset_dir}patches/{loc}/images/", exist_ok = True)
+    os.makedirs(f"{dataset_dir}patches/{loc}/annotations/", exist_ok = True)
+    
+    for idx in range(0, x_len):
+        img = x[idx]
+        mask = y[idx]
+        img_num = df.iloc[idx][1]
+
+        img_h = img.shape[0]
+        img_w = img.shape[1]
+
+        for i in range(0, NUM_PATCHES):
+            x_center = random.randint(0 + int(PATCH_SIZE / 2), img_w - int(PATCH_SIZE / 2))
+            y_center = random.randint(0 + int(PATCH_SIZE / 2), img_h - int(PATCH_SIZE / 2))
+            img_patch = img[y_center - int(PATCH_SIZE / 2): y_center + int(PATCH_SIZE / 2),
+                        x_center - int(PATCH_SIZE / 2) : x_center + int(PATCH_SIZE / 2),
+                        :]
+            mask_patch = mask[y_center - int(PATCH_SIZE / 2):y_center + int(PATCH_SIZE / 2),
+                         x_center - int(PATCH_SIZE / 2):x_center + int(PATCH_SIZE / 2),
+                         :]
+
+            img_patch = (img_patch - mean) / std
+
+            np.save(f"{dataset_dir}patches/{loc}/images/{img_num}_{i}", img_patch)
+            np.save(f"{dataset_dir}patches/{loc}/annotations/{img_num}_{i}", mask_patch)
+            
+        if idx % int(x_len / 4) == 0:
+            print(f"Completed: {idx}/{x_len}")
 
 class DataGen(tf.keras.utils.Sequence):
   def __init__(self, dataset_dir, batch_size) :
