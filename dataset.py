@@ -21,7 +21,6 @@ csv_dir = "diatom_dataset/diatom_csv/"
 patches_dir = "diatom_dataset/patches"
 annotations_dir = os.path.join(dataset_dir, "annotations")
 images_dir = os.path.join(dataset_dir, "images")
-IMAGE_SIZE = 256
 BATCH_SIZE = 32
 PATCH_SIZE = 256
 NUM_PATCHES = 10
